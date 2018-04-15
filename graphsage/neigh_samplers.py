@@ -27,3 +27,26 @@ class UniformNeighborSampler(Layer):
         adj_lists = tf.transpose(tf.random_shuffle(tf.transpose(adj_lists)))
         adj_lists = tf.slice(adj_lists, [0,0], [-1, num_samples])
         return adj_lists
+
+class NonUniformNeighborSampler(Layer):
+    """
+    NonUniformly samples neighbors.
+    Assumes that adj lists are padded with random re-sampling
+    """
+    def __init__(self, adj_info, **kwargs):
+        super(NonUniformNeighborSampler, self).__init__(**kwargs)
+        self.adj_info = adj_info
+
+    def _call(self, inputs):
+        ids, num_samples = inputs
+        adj_lists = tf.nn.embedding_lookup(self.adj_info, ids) 
+        # Use Node2vec algorithm here instead of random shuffle.
+        # α_pq(t, x) = { 1/p if dtx = 0,
+        #                1 if dtx = 1,
+        #                1/q if dtx = 2
+        #              }
+        # Learn p and q. Train on sample?
+        adj_lists = tf.transpose(tf.random_shuffle(tf.transpose(adj_lists)))
+        adj_lists = tf.slice(adj_lists, [0,0], [-1, num_samples])
+        # print(adj_lists)
+        return adj_lists
